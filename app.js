@@ -27,6 +27,9 @@ app.use((req, res, next) => {
 const userRouter = require('./src/users/routes.config')
 userRouter.routesConfig(app);
 
+const candidateRouter = require('./src/candidates/routes.config')
+candidateRouter.routesConfig(app);
+
 
 const cors = require('cors');
 

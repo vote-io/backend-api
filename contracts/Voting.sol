@@ -37,7 +37,9 @@ contract Voting {
     struct candidate {
         uint256 candidateId;
         string name;
+        string desc;
         uint256 voteCount;
+        string picture;
     }
 
     // Polls
