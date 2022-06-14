@@ -108,20 +108,26 @@ contract Voting {
 
     mapping(uint256 => pollVoted[]) joinedPolls;
 
-    function joinPoll(uint256 phoneNo, uint256 pollId) public {
+    function joinPoll(uint256 phoneNo, uint256 pollId) public returns (bool) {
+        if (pollId >= numberOfPolls) {
+            return false;
+        }
         joinedPolls[phoneNo].push(pollVoted(pollId, false));
     }
 
     //to get the list of polls joined
-    struct joinedList{
+    struct joinedList {
         poll p;
         bool voted;
     }
 
-    function joinedPollsList(uint256 phoneNo) public returns (joinedList [] memory ){
+    function joinedPollsList(uint256 phoneNo)
+        public
+        returns (joinedList[] memory)
+    {
         uint256 len = joinedPolls[phoneNo].length;
         joinedList[] memory pollsList = new joinedList[](len);
-        for(uint256 x=0; x<joinedPolls[phoneNo].length;x++){
+        for (uint256 x = 0; x < joinedPolls[phoneNo].length; x++) {
             pollsList[x].p = pollList[joinedPolls[phoneNo][x].pollId];
             pollsList[x].voted = joinedPolls[phoneNo][x].voted;
         }
@@ -129,11 +135,15 @@ contract Voting {
         return pollsList;
     }
 
-    function vote(uint256 phoneNo, uint256 pollId, uint256 candidateId) public returns (bool) {
+    function vote(
+        uint256 phoneNo,
+        uint256 pollId,
+        uint256 candidateId
+    ) public returns (bool) {
         pollList[pollId].candidateList[candidateId].voteCount += 1;
 
-        for(uint256 x=0; x<joinedPolls[phoneNo].length;x++){
-            if(joinedPolls[phoneNo][x].pollId==pollId){
+        for (uint256 x = 0; x < joinedPolls[phoneNo].length; x++) {
+            if (joinedPolls[phoneNo][x].pollId == pollId) {
                 joinedPolls[phoneNo][x].voted = true;
             }
         }
