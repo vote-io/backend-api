@@ -1,99 +1,92 @@
 pragma solidity ^0.8.0;
 
 contract Voting {
+
     //users details
-    struct user {
+    struct user{
         string name;
         string email;
-        uint256 index;
+        uint index;
     }
 
-    uint256[] private userIndex;
+    uint[] private userIndex;
 
-    mapping(uint256 => user) userList;
+    mapping(uint => user) userList;
 
-    function isUser(uint256 phoneNo) public returns (bool) {
-        if (userIndex.length == 0) return false;
+    function isUser(uint phoneNo) public returns(bool) {
+        if(userIndex.length == 0) 
+            return false;
         return (userIndex[userList[phoneNo].index] == phoneNo);
     }
 
-    function addUser(
-        uint256 phoneNo,
-        string memory name,
-        string memory email
-    ) public returns (bool exisiting) {
-        if (isUser(phoneNo) == true) return false;
+    function addUser(uint phoneNo, string memory name, string memory email) public returns (bool exisiting) {
+        if(isUser(phoneNo) == true)
+            return false;
         userList[phoneNo] = user(name, email, 0);
         userIndex.push(phoneNo);
-        userList[phoneNo].index = userIndex.length - 1;
+        userList[phoneNo].index = userIndex.length-1;
         return true;
     }
 
-    function getUser(uint256 phoneNo) public view returns (user memory) {
+    function getUser(uint phoneNo) view public returns(user memory) {
         return userList[phoneNo];
     }
 
-    // Candidate
-    struct candidate {
-        uint256 candidateId;
+    // Candidate 
+    struct candidate{
+        uint candidateId;
         string name;
-        string desc;
-        uint256 voteCount;
-        string picture;
+        uint voteCount;
     }
 
     // Polls
-    struct poll {
-        uint256 id;
+    struct poll{
+        uint id;
         string name;
-        uint256 creatorUserId;
+        uint creatorUserId;
         candidate[] candidateList;
-        uint256 startTime;
-        uint256 endTime;
-        uint256 winner;
+        uint startTime;
+        uint endTime;
+        uint winner;
     }
 
     // To generate a poll id
-    uint256 numberOfPolls;
+    uint numberOfPolls;
 
     constructor() public {
         numberOfPolls = 0;
     }
 
-    mapping(uint256 => poll) pollList;
+    mapping(uint => poll) pollList;
 
     // Create poll function
-    function addPoll(
-        string memory name,
-        uint256 phoneNo,
-        candidate[] memory candidateList,
-        uint256 startTime,
-        uint256 endTime
-    ) public returns (bool success) {
+    function addPoll(string memory name, uint phoneNo,  candidate[] memory candidateList, uint startTime, uint  endTime) 
+    public returns (bool success) {
         pollList[numberOfPolls].id = numberOfPolls;
         pollList[numberOfPolls].name = name;
         pollList[numberOfPolls].creatorUserId = phoneNo;
-        for (uint256 i = 0; i < candidateList.length; i++)
+        for (uint i=0; i<candidateList.length; i++) 
             pollList[numberOfPolls].candidateList.push(candidateList[i]);
-
+        
         pollList[numberOfPolls].startTime = startTime;
         pollList[numberOfPolls].endTime = endTime;
 
         numberOfPolls += 1;
-        return true;
+        return true;        
     }
 
     // Get polls created by this user
-    function getPolls(uint256 phoneNo) public returns (poll[] memory) {
-        uint256 count = 0;
-        for (uint256 x = 0; x < numberOfPolls; x++) {
-            if (pollList[x].creatorUserId == phoneNo) count++;
+    function getPolls(uint phoneNo) public returns (poll [] memory){
+        uint count =  0;
+        for(uint x=0; x<numberOfPolls; x++){
+            if(pollList[x].creatorUserId == phoneNo)
+                count++;
         }
 
         poll[] memory userPollList = new poll[](count);
-        uint256 temp = 0;
-        for (uint256 x = 0; x < numberOfPolls; x++) {
-            if (pollList[x].creatorUserId == phoneNo)
+        uint temp = 0;
+        for(uint x=0; x<numberOfPolls; x++){
+            if(pollList[x].creatorUserId == phoneNo)
                 userPollList[temp++] = pollList[x];
         }
 
@@ -101,23 +94,43 @@ contract Voting {
     }
 
     //Joined polls
-    struct pollVoted {
-        uint256 pollId;
+    struct pollVoted{
+        uint pollId;
         bool voted;
     }
 
-    mapping(uint256 => pollVoted[]) joinedPolls;
+    mapping(uint => pollVoted[]) joinedPolls;
 
-    function joinPoll(uint256 phoneNo, uint256 pollId) public {
+    function joinPoll(uint phoneNo, uint pollId) public {
         joinedPolls[phoneNo].push(pollVoted(pollId, false));
     }
 
-    // function joinedPollsList(uint, phoneNo) public returns (){
+    //to get the list of polls joined
+    struct joinedList{
+        poll p;
+        bool voted;
+    }
 
-    // }
+    function joinedPollsList(uint phoneNo) public returns (joinedList [] memory ){
+        uint x = joinedPolls[phoneNo].length;
+        joinedList[] memory pollsList = new joinedList[](x);
+        for(uint x=0; x<joinedPolls[phoneNo].length;x++){
+            pollsList[x].p = pollList[joinedPolls[phoneNo][x].pollId];
+            pollsList[x].voted = joinedPolls[phoneNo][x].voted;
+        }
 
-    function vote(uint256 pollId, uint256 candidateId) public returns (bool) {
+        return pollsList;
+    }
+
+    function vote(uint phoneNo, uint pollId, uint candidateId) public returns (bool ){
         pollList[pollId].candidateList[candidateId].voteCount += 1;
+
+        for(uint x=0; x<joinedPolls[phoneNo].length;x++){
+            if(joinedPolls[phoneNo][x].pollId==pollId){
+                joinedPolls[phoneNo][x].voted = true;
+            }
+        }
+
         return true;
     }
 }
