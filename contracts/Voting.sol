@@ -1,79 +1,121 @@
 pragma solidity ^0.8.0;
 
 contract Voting {
-    // a candidate structure that stores basic data about a
-    // candidate that stands for the election
-
-    struct candidate {
+    //users details
+    struct user {
         string name;
-        uint256 votes;
-    }
-
-    candidate[] public candidate_list;
-
-    // a voter structure that will store the details about the voter
-    // includes: voted bool, verified bool,
-    // IMP: do we store who the person's voted ror ?
-    struct voter {
-        bool voted;
-        bool verified;
-        bool exists;
-    }
-
-    mapping(address => voter) voter_list;
-
-    // A constructor that init. the candidates
-    constructor(string[] memory c_name) {
-        for (uint256 i = 0; i < c_name.length; i++) {
-            candidate memory temp;
-            temp.name = c_name[i];
-            temp.votes = 0;
-            candidate_list.push(temp);
-        }
-    }
-
-    // Bunch of useful functions
-
-    // function that gets the candidates
-    function getCandidates() public view returns (candidate[] memory) {
-        return candidate_list;
-    }
-
-    // function that adds voters to the voter_list
-    function add_voter(address v_address) public {
-        require(!voter_list[v_address].exists, "voter already exists");
-        voter memory temp;
-        temp.voted = false;
-        temp.verified = false;
-        temp.exists = true;
-        voter_list[v_address] = temp;
-    }
-
-    // function that verifies the voter
-    function verify_voter(address v_address) public {
-        require(voter_list[v_address].exists, "voter dos not exist");
-        require(!voter_list[v_address].verified, "already verified");
-        require(!voter_list[v_address].voted, "already voted");
-        voter_list[v_address].verified = true;
-    }
-
-    // function to vote
-    function vote(uint256 c_id) public {
-        require(voter_list[msg.sender].verified, "not verified");
-        require(!voter_list[msg.sender].voted, "already voted");
-        voter_list[msg.sender].voted = true;
-        candidate_list[c_id].votes += 1;
-    }
-
-    // function to get the results
-    function get_results() public view returns (string memory winner) {
-        uint256 maxVotes = 0;
+        string email;
         uint256 index;
-        for (uint256 i = 0; i < candidate_list.length; i++) {
-            if (candidate_list[i].votes > maxVotes) {
-                index = i;
-            }
+    }
+
+    uint256[] private userIndex;
+
+    mapping(uint256 => user) userList;
+
+    function isUser(uint256 phoneNo) public returns (bool) {
+        if (userIndex.length == 0) return false;
+        return (userIndex[userList[phoneNo].index] == phoneNo);
+    }
+
+    function addUser(
+        uint256 phoneNo,
+        string memory name,
+        string memory email
+    ) public returns (bool exisiting) {
+        if (isUser(phoneNo) == true) return false;
+        userList[phoneNo] = user(name, email, 0);
+        userIndex.push(phoneNo);
+        userList[phoneNo].index = userIndex.length - 1;
+        return true;
+    }
+
+    function getUser(uint256 phoneNo) public view returns (user memory) {
+        return userList[phoneNo];
+    }
+
+    // Candidate
+    struct candidate {
+        uint256 candidateId;
+        string name;
+        uint256 voteCount;
+    }
+
+    // Polls
+    struct poll {
+        uint256 id;
+        string name;
+        uint256 creatorUserId;
+        candidate[] candidateList;
+        uint256 startTime;
+        uint256 endTime;
+        uint256 winner;
+    }
+
+    // To generate a poll id
+    uint256 numberOfPolls;
+
+    constructor() public {
+        numberOfPolls = 0;
+    }
+
+    mapping(uint256 => poll) pollList;
+
+    // Create poll function
+    function addPoll(
+        string memory name,
+        uint256 phoneNo,
+        candidate[] memory candidateList,
+        uint256 startTime,
+        uint256 endTime
+    ) public returns (bool success) {
+        pollList[numberOfPolls].id = numberOfPolls;
+        pollList[numberOfPolls].name = name;
+        pollList[numberOfPolls].creatorUserId = phoneNo;
+        for (uint256 i = 0; i < candidateList.length; i++)
+            pollList[numberOfPolls].candidateList.push(candidateList[i]);
+
+        pollList[numberOfPolls].startTime = startTime;
+        pollList[numberOfPolls].endTime = endTime;
+
+        numberOfPolls += 1;
+        return true;
+    }
+
+    // Get polls created by this user
+    function getPolls(uint256 phoneNo) public returns (poll[] memory) {
+        uint256 count = 0;
+        for (uint256 x = 0; x < numberOfPolls; x++) {
+            if (pollList[x].creatorUserId == phoneNo) count++;
         }
-        winner = candidate_list[index].name;
+
+        poll[] memory userPollList = new poll[](count);
+        uint256 temp = 0;
+        for (uint256 x = 0; x < numberOfPolls; x++) {
+            if (pollList[x].creatorUserId == phoneNo)
+                userPollList[temp++] = pollList[x];
+        }
+
+        return userPollList;
+    }
+
+    //Joined polls
+    struct pollVoted {
+        uint256 pollId;
+        bool voted;
+    }
+
+    mapping(uint256 => pollVoted[]) joinedPolls;
+
+    function joinPoll(uint256 phoneNo, uint256 pollId) public {
+        joinedPolls[phoneNo].push(pollVoted(pollId, false));
+    }
+
+    // function joinedPollsList(uint, phoneNo) public returns (){
+
+    // }
+
+    function vote(uint256 pollId, uint256 candidateId) public returns (bool) {
+        pollList[pollId].candidateList[candidateId].voteCount += 1;
+        return true;
     }
 }

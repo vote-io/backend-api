@@ -99,8 +99,6 @@ exports.verify = async (req, res) => {
     try {
         await redisClient.connect();
         const otp = await redisClient.get(req.body.phone);
-        console.log(otp);
-        console.log(req.body.otp);
         if (otp == null) {
             await redisClient.quit();
             res.status(403).json({ message: "Unauthorized access" });
