@@ -69,7 +69,7 @@ contract Voting {
         candidate[] memory candidateList,
         uint256 startTime,
         uint256 endTime
-    ) public returns (bool success) {
+    ) public returns (uint256 pollId) {
         pollList[numberOfPolls].id = numberOfPolls;
         pollList[numberOfPolls].name = name;
         pollList[numberOfPolls].creatorUserId = phoneNo;
@@ -80,7 +80,7 @@ contract Voting {
         pollList[numberOfPolls].endTime = endTime;
 
         numberOfPolls += 1;
-        return true;
+        return numberOfPolls - 1;
     }
 
     // Get polls created by this user
@@ -113,6 +113,7 @@ contract Voting {
             return false;
         }
         joinedPolls[phoneNo].push(pollVoted(pollId, false));
+        return true;
     }
 
     //to get the list of polls joined
